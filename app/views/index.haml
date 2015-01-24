@@ -1,0 +1,65 @@
+!!!
+%head
+  %title Websocket test
+  %link{rel: "stylesheet", type: "text/css", href: "//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css"}
+  %script{ src: '//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js' }
+  %script{ src: '//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js' }
+  :javascript
+    $(function(){
+      var socket = new WebSocket("#{ws_url}");
+
+      function log_text(text) {
+        $("#log").append("<li>" + text + "</li>");
+      };
+
+      socket.onopen = function() {
+        log_text("Соединение установлено.");
+      };
+
+      socket.onclose = function(event) {
+        if (event.wasClean) {
+          log_text('Соединение закрыто чисто');
+        } else {
+          log_text('Обрыв соединения');
+        }
+        log_text('Код: ' + event.code + ' причина: ' + event.reason);
+      };
+
+      socket.onmessage = function(event) {
+        log_text("Получены данные " + event.data);
+      };
+
+      socket.onerror = function(error) {
+        log_text("Ошибка " + error.message);
+      };
+
+      $("#send").on('click', function(){
+        socket.send(JSON.stringify({ action: 'message', data: { to: $('#to').val(), text: $('#data').val() } }));
+        return false;
+      })
+    })
+
+
+%body
+  .container
+    .row
+      .col-md-12
+        %h1.page-header Ваш ID: #{client_id}
+    .row
+      .col-md-12
+        %form.form-horizontal
+          .form-group
+            .col-md-2
+              %label Текст
+            .col-md-10
+              %textarea#data.form-control
+          .form-group
+            .col-md-2
+              %label Кому:
+            .col-md-10
+              %input#to.form-control{type: 'text'}
+          .form-group
+            .col-md-12
+              %button#send.btn.btn-primary Отправить
+        %hr
+        %ul#log
